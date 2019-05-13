@@ -6,11 +6,19 @@
  */
 package org.semux.core;
 
+import static java.nio.file.StandardOpenOption.APPEND;
+import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.WRITE;
+
 import static org.semux.core.Fork.UNIFORM_DISTRIBUTION;
 import static org.semux.core.Fork.VIRTUAL_MACHINE;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -471,6 +479,21 @@ public class BlockchainImpl implements Blockchain {
             enc.writeString(v);
         }
         indexDB.put(Bytes.of(TYPE_VALIDATORS), enc.toBytes());
+
+        String validatorsQueueFileName = System.getenv("XYZ");
+        System.out.println("String validatorsQueueFileName = " + validatorsQueueFileName);
+        if (validatorsQueueFileName != null && !validatorsQueueFileName.isEmpty()) {
+          try (BufferedWriter w = Files.newBufferedWriter(Paths.get(validatorsQueueFileName), CREATE, WRITE, APPEND)) {
+            for (int n = 0; n < validators.size(); ++n) {
+              String v = validators.get(n);
+              String line = (number + n) + " " + v;
+              w.write(line, 0, line.length());
+              w.newLine();
+            }
+          } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+          }
+        }
     }
 
     /**
